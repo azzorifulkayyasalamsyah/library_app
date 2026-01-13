@@ -18,100 +18,141 @@ class BookCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 3,
-      margin: const EdgeInsets.all(8),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      elevation: 6,
+      shadowColor: Colors.black12,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       child: Padding(
         padding: const EdgeInsets.all(12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Icon PDF
-            const Center(
-              child: Icon(Icons.picture_as_pdf, size: 48, color: Colors.red),
+            // Thumbnail / Cover image (try asset image, fallback to icon)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: SizedBox(
+                height: 96,
+                width: double.infinity,
+                child: Image.asset(
+                  'assets/images/${book.id}.png',
+                  fit: BoxFit.cover,
+                  errorBuilder: (context, error, stackTrace) => Container(
+                    color: Colors.grey[100],
+                    child: const Center(
+                      child: Icon(
+                        Icons.picture_as_pdf,
+                        size: 48,
+                        color: Colors.red,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             ),
 
             const SizedBox(height: 8),
 
-            // Judul
+            // Judul (uppercase untuk tampilan seperti mockup)
             Text(
-              book.title,
-              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              book.title.toUpperCase(),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
 
             // Penulis
-            Text(book.author, style: const TextStyle(fontSize: 13)),
+            Text(
+              book.author,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 13, color: Colors.black54),
+            ),
 
-            const SizedBox(height: 6),
+            const Spacer(),
 
             // Stok
             Text(
-              'Stok tersedia: ${book.stock}',
+              'Stok: ${book.stock}',
               style: TextStyle(
                 color: book.stock > 0 ? Colors.green : Colors.red,
                 fontWeight: FontWeight.w600,
               ),
             ),
 
-            const SizedBox(height: 10),
+            const SizedBox(height: 8),
 
-            // Tombol aksi
+            // Tombol aksi (rapi, ukuran seragam)
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // PINJAM
-                ElevatedButton(
-                  onPressed: book.stock == 0
-                      ? null
-                      : () async {
-                          final success = await BorrowService.borrowBook(
-                            bookId: book.id,
-                            userId: userId,
-                          );
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: book.stock == 0
+                        ? null
+                        : () async {
+                            final success = await BorrowService.borrowBook(
+                              bookId: book.id,
+                              userId: userId,
+                            );
 
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                success
-                                    ? 'Buku berhasil dipinjam'
-                                    : 'Stok habis',
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  success
+                                      ? 'Buku berhasil dipinjam'
+                                      : 'Stok habis',
+                                ),
                               ),
-                            ),
-                          );
+                            );
 
-                          if (success && onBorrow != null) onBorrow!();
-                        },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.deepPurple,
+                            if (success && onBorrow != null) onBorrow!();
+                          },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF6A2CBC),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      textStyle: const TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    child: const Text('Pinjam'),
                   ),
-                  child: const Text('Pinjam'),
                 ),
 
-                // BACA PDF
-                OutlinedButton(
-                  onPressed: () async {
-                    final allowed = await BorrowService.canRead(
-                      bookId: book.id,
-                      userId: userId,
-                    );
+                const SizedBox(width: 8),
 
-                    if (!allowed) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Anda belum meminjam buku ini'),
+                SizedBox(
+                  width: 44,
+                  height: 44,
+                  child: OutlinedButton(
+                    onPressed: () async {
+                      final allowed = await BorrowService.canRead(
+                        bookId: book.id,
+                        userId: userId,
+                      );
+
+                      if (!allowed) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Anda belum meminjam buku ini'),
+                          ),
+                        );
+                        return;
+                      }
+
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => PdfReaderPage(book: book),
                         ),
                       );
-                      return;
-                    }
-
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => PdfReaderPage(book: book),
+                    },
+                    style: OutlinedButton.styleFrom(
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    );
-                  },
-                  child: const Text('Baca'),
+                    ),
+                    child: const Icon(Icons.menu_book_outlined),
+                  ),
                 ),
               ],
             ),

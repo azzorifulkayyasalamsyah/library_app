@@ -85,6 +85,9 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    final width = MediaQuery.of(context).size.width;
+    final crossAxisCount = width < 420 ? 2 : 3;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Daftar Buku'),
@@ -92,27 +95,39 @@ class _CustomerDashboardState extends State<CustomerDashboard> {
       ),
       body: books.isEmpty
           ? const Center(child: Text('Belum ada buku'))
-          : RefreshIndicator(
-              onRefresh: _refresh,
-              child: GridView.builder(
-                padding: const EdgeInsets.all(8),
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                  childAspectRatio: 0.65,
+          : Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [Colors.pink.shade50, Colors.white],
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
-                itemCount: books.length,
-                itemBuilder: (context, index) {
-                  final book = books[index];
-                  return BookCard(
-                    book: book,
-                    userId: userId,
-                    onBorrow: () async {
-                      await _refresh();
-                    },
-                  );
-                },
+              ),
+              child: RefreshIndicator(
+                onRefresh: _refresh,
+                child: GridView.builder(
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 16,
+                  ),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.72,
+                  ),
+                  itemCount: books.length,
+                  itemBuilder: (context, index) {
+                    final book = books[index];
+                    return BookCard(
+                      book: book,
+                      userId: userId,
+                      onBorrow: () async {
+                        await _refresh();
+                      },
+                    );
+                  },
+                ),
               ),
             ),
     );
